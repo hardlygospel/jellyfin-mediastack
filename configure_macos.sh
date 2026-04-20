@@ -34,6 +34,8 @@ open http://localhost:7878
 open http://localhost:8989
 open http://localhost:9696
 open http://localhost:8080
+open http://localhost:8096
+open http://localhost:5055
 sleep 10
 
 echo ""
@@ -207,5 +209,6 @@ echo "  Radarr:      http://localhost:7878"
 echo "  Sonarr:      http://localhost:8989"
 echo "  Prowlarr:    http://localhost:9696"
 echo "  qBittorrent: http://localhost:8080"
+echo "  Jellyfin:    http://localhost:8096"
 echo "  Jellyseerr:  http://localhost:5055"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
