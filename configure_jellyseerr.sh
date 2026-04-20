@@ -10,9 +10,7 @@
 set -e
 
 JELLYSEERR="http://localhost:5055"
-JELLYFIN_URL="http://jellyfin:8096"
-RADARR_INT="http://radarr:7878"
-SONARR_INT="http://sonarr:8989"
+SETTINGS="$HOME/docker/jellyseerr/config/settings.json"
 
 RADARR_KEY=$(grep -oE '<ApiKey>[^<]+' "$HOME/docker/radarr/config/config.xml" 2>/dev/null | sed 's/<ApiKey>//' | head -1)
 SONARR_KEY=$(grep -oE '<ApiKey>[^<]+' "$HOME/docker/sonarr/config/config.xml" 2>/dev/null | sed 's/<ApiKey>//' | head -1)
@@ -22,32 +20,23 @@ if [ -z "$RADARR_KEY" ] || [ -z "$SONARR_KEY" ]; then
   exit 1
 fi
 
-echo ""
-read -p "  Jellyfin username: " JF_USER
-read -s -p "  Jellyfin password: " JF_PASS
-echo ""
-echo ""
-
 echo "⏳ Waiting for Jellyseerr..."
 for i in {1..15}; do
   code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 "$JELLYSEERR")
-  [ "$code" = "200" ] || [ "$code" = "302" ] || [ "$code" = "307" ] && break
+  case "$code" in 200|302|307) break ;; esac
   sleep 2
 done
 
-echo "🔑 Signing in to Jellyseerr via Jellyfin..."
-AUTH=$(curl -s -c /tmp/js_cookies.txt -b /tmp/js_cookies.txt \
-  -X POST "$JELLYSEERR/api/v1/auth/jellyfin" \
-  -H "Content-Type: application/json" \
-  -d "{\"username\":\"$JF_USER\",\"password\":\"$JF_PASS\",\"hostname\":\"$JELLYFIN_URL\"}")
+# Get Jellyseerr API key from its config file
+JS_KEY=$(python3 -c "import json; print(json.load(open('$SETTINGS'))['main']['apiKey'])" 2>/dev/null)
+if [ -z "$JS_KEY" ]; then
+  echo "❌ Could not read Jellyseerr API key from $SETTINGS"
+  exit 1
+fi
 
-echo "$AUTH" | python3 -c "import sys,json; d=json.load(sys.stdin); print('  ✅ Signed in as: '+d.get('displayName',d.get('username','?')))" 2>/dev/null \
-  || { echo "  ❌ Auth failed: $AUTH"; exit 1; }
-
-echo ""
 echo "⚙️  Adding Radarr..."
-RADARR_RESULT=$(curl -s -b /tmp/js_cookies.txt \
-  -X POST "$JELLYSEERR/api/v1/settings/radarr" \
+RADARR_RESULT=$(curl -s -X POST "$JELLYSEERR/api/v1/settings/radarr" \
+  -H "X-Api-Key: $JS_KEY" \
   -H "Content-Type: application/json" \
   -d "{
     \"name\": \"Radarr\",
@@ -66,13 +55,13 @@ RADARR_RESULT=$(curl -s -b /tmp/js_cookies.txt \
     \"syncEnabled\": false,
     \"preventSearch\": false
   }")
-echo "$RADARR_RESULT" | python3 -c "import sys,json; d=json.load(sys.stdin); print('  ✅ Radarr added (id: '+str(d.get('id','?'))+')')" 2>/dev/null \
+echo "$RADARR_RESULT" | python3 -c "import sys,json; d=json.load(sys.stdin); print('  ✅ Radarr (id: '+str(d.get('id','?'))+')')" 2>/dev/null \
   || echo "  ⚠️  Radarr: $RADARR_RESULT"
 
 echo ""
 echo "⚙️  Adding Sonarr..."
-SONARR_RESULT=$(curl -s -b /tmp/js_cookies.txt \
-  -X POST "$JELLYSEERR/api/v1/settings/sonarr" \
+SONARR_RESULT=$(curl -s -X POST "$JELLYSEERR/api/v1/settings/sonarr" \
+  -H "X-Api-Key: $JS_KEY" \
   -H "Content-Type: application/json" \
   -d "{
     \"name\": \"Sonarr\",
@@ -91,13 +80,19 @@ SONARR_RESULT=$(curl -s -b /tmp/js_cookies.txt \
     \"preventSearch\": false,
     \"enableSeasonFolders\": true
   }")
-echo "$SONARR_RESULT" | python3 -c "import sys,json; d=json.load(sys.stdin); print('  ✅ Sonarr added (id: '+str(d.get('id','?'))+')')" 2>/dev/null \
+echo "$SONARR_RESULT" | python3 -c "import sys,json; d=json.load(sys.stdin); print('  ✅ Sonarr (id: '+str(d.get('id','?'))+')')" 2>/dev/null \
   || echo "  ⚠️  Sonarr: $SONARR_RESULT"
+
+echo ""
+echo "⏳ Finalising setup..."
+curl -s -X POST "$JELLYSEERR/api/v1/settings/initialize" \
+  -H "X-Api-Key: $JS_KEY" -H "Content-Type: application/json" > /dev/null
+echo "  ✅ Done"
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "✅ Jellyseerr configured."
 echo ""
-echo "  Open http://localhost:5055 and complete the setup wizard."
-echo "  When it asks for Jellyfin URL use: http://jellyfin:8096"
+echo "  Open http://localhost:5055"
+echo "  Sign in with your Jellyfin credentials"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
