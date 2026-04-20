@@ -89,6 +89,30 @@ else
 fi
 
 echo ""
+echo "📁 Setting root folders..."
+
+# Remove any existing wrong root folders, then add the correct container paths
+RADARR_FOLDERS=$(curl -s "$RADARR/api/v3/rootfolder" -H "X-Api-Key: $RADARR_KEY")
+echo "$RADARR_FOLDERS" | grep -oE '"id":[0-9]+' | grep -oE '[0-9]+' | while read id; do
+  curl -s -X DELETE "$RADARR/api/v3/rootfolder/$id" -H "X-Api-Key: $RADARR_KEY" > /dev/null
+done
+curl -s -X POST "$RADARR/api/v3/rootfolder" \
+  -H "X-Api-Key: $RADARR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"path":"/movies"}' > /dev/null
+echo "  ✅ Radarr root folder → /movies"
+
+SONARR_FOLDERS=$(curl -s "$SONARR/api/v3/rootfolder" -H "X-Api-Key: $SONARR_KEY")
+echo "$SONARR_FOLDERS" | grep -oE '"id":[0-9]+' | grep -oE '[0-9]+' | while read id; do
+  curl -s -X DELETE "$SONARR/api/v3/rootfolder/$id" -H "X-Api-Key: $SONARR_KEY" > /dev/null
+done
+curl -s -X POST "$SONARR/api/v3/rootfolder" \
+  -H "X-Api-Key: $SONARR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"path":"/tv"}' > /dev/null
+echo "  ✅ Sonarr root folder → /tv"
+
+echo ""
 echo "📡 Adding indexers to Prowlarr..."
 
 add_indexer() {
