@@ -74,6 +74,26 @@ A record of every bug discovered and fixed during initial setup.
 
 ---
 
+## 7. 🌐 Jellyseerr couldn't reach Radarr/Sonarr
+
+**Problem:** Jellyseerr was started from a different directory (`~/Downloads/`) than the rest of the stack (`~/repos/mediastack/`). Docker Compose creates a default network named after the directory, so Jellyseerr ended up on `downloads_default` while the other containers were on `mediastack_default`. Containers on different networks can't reach each other by name.
+
+**Fix:** Added an explicit named network (`mediastack`) to `docker-compose.yml` so all containers share the same network regardless of which directory the stack is started from. Ran `docker compose up -d` from `~/repos/mediastack/` to recreate all containers on the correct network.
+
+**Key lesson:** Always run `docker compose` from `~/repos/mediastack/` — not from `~/Downloads/`.
+
+---
+
+## 8. 🔑 Jellyseerr setup not completing via API
+
+**Problem:** The `configure_jellyseerr.sh` script authenticated via Jellyfin's login endpoint, but Jellyseerr returned "Jellyfin hostname already configured" on re-runs and the session cookie wasn't being set correctly, so subsequent API calls failed with "cookie required".
+
+**Fix:** Jellyseerr exposes its own API key in `~/docker/jellyseerr/config/settings.json`. Using `X-Api-Key` header with that key bypasses the cookie auth entirely and works reliably on both first run and re-runs.
+
+**Script:** `configure_jellyseerr.sh` (updated)
+
+---
+
 ## ✅ Final working configuration
 
 | Connection | Value |
@@ -84,6 +104,8 @@ A record of every bug discovered and fixed during initial setup.
 | Prowlarr URL (from Prowlarr config) | `http://prowlarr:9696` |
 | Radarr URL (from Prowlarr config) | `http://radarr:7878` |
 | Sonarr URL (from Prowlarr config) | `http://sonarr:8989` |
+| Docker network | `mediastack` (explicit — defined in docker-compose.yml) |
+| Always run compose from | `~/repos/mediastack/` |
 
 ---
 
