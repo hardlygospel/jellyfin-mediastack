@@ -22,24 +22,61 @@ if [ -z "$PROWLARR_KEY" ] || [ -z "$RADARR_KEY" ] || [ -z "$SONARR_KEY" ]; then
 fi
 
 echo ""
+echo "🔍 Fetching app profile ID..."
+APP_PROFILE_ID=$(curl -s "$PROWLARR/api/v1/appprofile" -H "X-Api-Key: $PROWLARR_KEY" | grep -oE '"id":[0-9]+' | grep -oE '[0-9]+' | head -1)
+if [ -z "$APP_PROFILE_ID" ]; then
+  APP_PROFILE_ID=1
+fi
+echo "  Using profile ID: $APP_PROFILE_ID"
+
+echo ""
 echo "📡 Adding indexers to Prowlarr..."
 
 add_indexer() {
-  local name="$1"
-  local defname="$2"
-  curl -s -X POST "$PROWLARR/api/v1/indexer" \
+  local defname="$1"
+  local name="$2"
+
+  # Fetch the schema for this indexer
+  local schema
+  schema=$(curl -s "$PROWLARR/api/v1/indexer/schema" -H "X-Api-Key: $PROWLARR_KEY" \
+    | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+match = next((x for x in data if x.get('definitionName','').lower() == '$defname'.lower()), None)
+if match:
+    match['name'] = '$name'
+    match['enableRss'] = True
+    match['enableAutomaticSearch'] = True
+    match['enableInteractiveSearch'] = True
+    match['appProfileId'] = $APP_PROFILE_ID
+    match['priority'] = 25
+    print(json.dumps(match))
+" 2>/dev/null)
+
+  if [ -z "$schema" ]; then
+    echo "  ⚠️  $name — schema not found, skipping"
+    return
+  fi
+
+  local result
+  result=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$PROWLARR/api/v1/indexer" \
     -H "X-Api-Key: $PROWLARR_KEY" \
     -H "Content-Type: application/json" \
-    -d "{\"name\":\"$name\",\"enableRss\":true,\"enableAutomaticSearch\":true,\"enableInteractiveSearch\":true,\"supportsRss\":true,\"supportsSearch\":true,\"protocol\":\"torrent\",\"definitionName\":\"$defname\",\"fields\":[],\"tags\":[]}" > /dev/null
-  echo "  ✅ $name"
+    -d "$schema")
+
+  if [ "$result" = "201" ] || [ "$result" = "200" ]; then
+    echo "  ✅ $name"
+  else
+    echo "  ⚠️  $name — HTTP $result"
+  fi
 }
 
-add_indexer "YTS"              "YTS"
-add_indexer "1337x"            "1337x"
-add_indexer "EZTV"             "EZTV"
-add_indexer "Nyaa"             "Nyaa"
-add_indexer "The Pirate Bay"   "ThePirateBay"
-add_indexer "Kickass Torrents" "KickassTorrents"
+add_indexer "YTS"            "YTS"
+add_indexer "1337x"          "1337x"
+add_indexer "EZTV"           "EZTV"
+add_indexer "Nyaa"           "Nyaa"
+add_indexer "ThePirateBay"   "The Pirate Bay"
+add_indexer "KickassTorrents" "Kickass Torrents"
 
 echo ""
 echo "🔗 Syncing Prowlarr → Radarr and Sonarr..."
