@@ -25,7 +25,6 @@ for service in "$PROWLARR" "$RADARR" "$SONARR" "$QB"; do
   done
 done
 
-# xdg-open requires a display — skip silently if running headless
 if [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
   xdg-open http://localhost:7878 2>/dev/null || true
   xdg-open http://localhost:8989 2>/dev/null || true
@@ -33,7 +32,7 @@ if [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
   xdg-open http://localhost:8080 2>/dev/null || true
   sleep 10
 else
-  echo "ℹ️  No display detected — skipping browser launch. Open the URLs manually if needed."
+  echo "ℹ️  No display detected — skipping browser launch."
 fi
 
 echo ""
@@ -96,46 +95,66 @@ fi
 echo ""
 echo "📁 Setting root folders..."
 
-# Remove any existing wrong root folders, then add the correct container paths
 RADARR_FOLDERS=$(curl -s "$RADARR/api/v3/rootfolder" -H "X-Api-Key: $RADARR_KEY")
-echo "$RADARR_FOLDERS" | grep -oE '"id":[0-9]+' | grep -oE '[0-9]+' | while read id; do
+for id in $(echo "$RADARR_FOLDERS" | python3 -c "import sys,json; [print(x['id']) for x in json.load(sys.stdin)]" 2>/dev/null); do
   curl -s -X DELETE "$RADARR/api/v3/rootfolder/$id" -H "X-Api-Key: $RADARR_KEY" > /dev/null
 done
 curl -s -X POST "$RADARR/api/v3/rootfolder" \
-  -H "X-Api-Key: $RADARR_KEY" \
-  -H "Content-Type: application/json" \
+  -H "X-Api-Key: $RADARR_KEY" -H "Content-Type: application/json" \
   -d '{"path":"/movies"}' > /dev/null
 echo "  ✅ Radarr root folder → /movies"
 
 SONARR_FOLDERS=$(curl -s "$SONARR/api/v3/rootfolder" -H "X-Api-Key: $SONARR_KEY")
-echo "$SONARR_FOLDERS" | grep -oE '"id":[0-9]+' | grep -oE '[0-9]+' | while read id; do
+for id in $(echo "$SONARR_FOLDERS" | python3 -c "import sys,json; [print(x['id']) for x in json.load(sys.stdin)]" 2>/dev/null); do
   curl -s -X DELETE "$SONARR/api/v3/rootfolder/$id" -H "X-Api-Key: $SONARR_KEY" > /dev/null
 done
 curl -s -X POST "$SONARR/api/v3/rootfolder" \
-  -H "X-Api-Key: $SONARR_KEY" \
-  -H "Content-Type: application/json" \
+  -H "X-Api-Key: $SONARR_KEY" -H "Content-Type: application/json" \
   -d '{"path":"/tv"}' > /dev/null
 echo "  ✅ Sonarr root folder → /tv"
 
 echo ""
 echo "📡 Adding indexers to Prowlarr..."
 
+APP_PROFILE_ID=$(curl -s "$PROWLARR/api/v1/appprofile" -H "X-Api-Key: $PROWLARR_KEY" \
+  | python3 -c "import sys,json; data=json.load(sys.stdin); print(data[0]['id'])" 2>/dev/null)
+APP_PROFILE_ID=${APP_PROFILE_ID:-1}
+
+for id in $(curl -s "$PROWLARR/api/v1/indexer" -H "X-Api-Key: $PROWLARR_KEY" \
+  | python3 -c "import sys,json; [print(x['id']) for x in json.load(sys.stdin)]" 2>/dev/null); do
+  curl -s -X DELETE "$PROWLARR/api/v1/indexer/$id" -H "X-Api-Key: $PROWLARR_KEY" > /dev/null
+done
+
 add_indexer() {
-  local name="$1"
-  local defname="$2"
-  curl -s -X POST "$PROWLARR/api/v1/indexer" \
-    -H "X-Api-Key: $PROWLARR_KEY" \
-    -H "Content-Type: application/json" \
-    -d "{\"name\":\"$name\",\"enableRss\":true,\"enableAutomaticSearch\":true,\"enableInteractiveSearch\":true,\"supportsRss\":true,\"supportsSearch\":true,\"protocol\":\"torrent\",\"indexerUrls\":[],\"definitionName\":\"$defname\",\"fields\":[],\"tags\":[]}" > /dev/null
-  echo "  ✅ $name"
+  local defname="$1"
+  local name="$2"
+  local schema
+  schema=$(curl -s "$PROWLARR/api/v1/indexer/schema" -H "X-Api-Key: $PROWLARR_KEY" \
+    | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+match = next((x for x in data if x.get('definitionName','').lower() == '$defname'.lower()), None)
+if match:
+    match['name'] = '$name'
+    match['enableRss'] = True
+    match['enableAutomaticSearch'] = True
+    match['enableInteractiveSearch'] = True
+    match['appProfileId'] = $APP_PROFILE_ID
+    match['priority'] = 25
+    print(json.dumps(match))
+" 2>/dev/null)
+  if [ -z "$schema" ]; then echo "  ⚠️  $name — not found"; return; fi
+  local result
+  result=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$PROWLARR/api/v1/indexer" \
+    -H "X-Api-Key: $PROWLARR_KEY" -H "Content-Type: application/json" -d "$schema")
+  [ "$result" = "201" ] || [ "$result" = "200" ] && echo "  ✅ $name" || echo "  ⚠️  $name — HTTP $result"
 }
 
-add_indexer "YTS"              "YTS"
-add_indexer "1337x"            "1337x"
-add_indexer "EZTV"             "EZTV"
-add_indexer "Nyaa"             "Nyaa"
-add_indexer "The Pirate Bay"   "ThePirateBay"
-add_indexer "Kickass Torrents" "KickassTorrents"
+add_indexer "yts"             "YTS"
+add_indexer "nyaasi"          "Nyaa"
+add_indexer "thepiratebay"    "The Pirate Bay"
+add_indexer "limetorrents"    "LimeTorrents"
+add_indexer "torrentdownload" "TorrentDownload"
 
 echo ""
 echo "🔗 Connecting Prowlarr to Radarr and Sonarr..."
@@ -146,8 +165,7 @@ add_prowlarr_app() {
   local apikey="$3"
   local apptype="$4"
   curl -s -X POST "$PROWLARR/api/v1/applications" \
-    -H "X-Api-Key: $PROWLARR_KEY" \
-    -H "Content-Type: application/json" \
+    -H "X-Api-Key: $PROWLARR_KEY" -H "Content-Type: application/json" \
     -d "{\"name\":\"$name\",\"syncLevel\":\"fullSync\",\"fields\":[{\"name\":\"prowlarrUrl\",\"value\":\"$PROWLARR\"},{\"name\":\"baseUrl\",\"value\":\"$url\"},{\"name\":\"apiKey\",\"value\":\"$apikey\"},{\"name\":\"syncCategories\",\"value\":[2000,2010,2020,2030,2040,2045,2050,2060]}],\"implementationName\":\"$apptype\",\"implementation\":\"$apptype\",\"configContract\":\"${apptype}Settings\",\"infoLink\":\"\"}" > /dev/null
   echo "  ✅ $name"
 }
@@ -156,18 +174,21 @@ add_prowlarr_app "Radarr" "$RADARR" "$RADARR_KEY" "Radarr"
 add_prowlarr_app "Sonarr" "$SONARR" "$SONARR_KEY" "Sonarr"
 
 echo ""
+echo "⏳ Forcing Prowlarr sync..."
+curl -s -X POST "$PROWLARR/api/v1/applications/sync" -H "X-Api-Key: $PROWLARR_KEY" > /dev/null
+echo "  ✅ Done"
+
+echo ""
 echo "⚙️  Adding qBittorrent to Radarr..."
 curl -s -X POST "$RADARR/api/v3/downloadclient" \
-  -H "X-Api-Key: $RADARR_KEY" \
-  -H "Content-Type: application/json" \
+  -H "X-Api-Key: $RADARR_KEY" -H "Content-Type: application/json" \
   -d "{\"name\":\"qBittorrent\",\"enable\":true,\"protocol\":\"torrent\",\"priority\":1,\"fields\":[{\"name\":\"host\",\"value\":\"localhost\"},{\"name\":\"port\",\"value\":8080},{\"name\":\"username\",\"value\":\"admin\"},{\"name\":\"password\",\"value\":\"$QB_NEW_PASS\"},{\"name\":\"movieCategory\",\"value\":\"radarr\"}],\"implementationName\":\"qBittorrent\",\"implementation\":\"QBittorrent\",\"configContract\":\"QBittorrentSettings\"}" > /dev/null
 echo "  ✅ Done"
 
 echo ""
 echo "⚙️  Adding qBittorrent to Sonarr..."
 curl -s -X POST "$SONARR/api/v3/downloadclient" \
-  -H "X-Api-Key: $SONARR_KEY" \
-  -H "Content-Type: application/json" \
+  -H "X-Api-Key: $SONARR_KEY" -H "Content-Type: application/json" \
   -d "{\"name\":\"qBittorrent\",\"enable\":true,\"protocol\":\"torrent\",\"priority\":1,\"fields\":[{\"name\":\"host\",\"value\":\"localhost\"},{\"name\":\"port\",\"value\":8080},{\"name\":\"username\",\"value\":\"admin\"},{\"name\":\"password\",\"value\":\"$QB_NEW_PASS\"},{\"name\":\"tvCategory\",\"value\":\"sonarr\"}],\"implementationName\":\"qBittorrent\",\"implementation\":\"QBittorrent\",\"configContract\":\"QBittorrentSettings\"}" > /dev/null
 echo "  ✅ Done"
 
