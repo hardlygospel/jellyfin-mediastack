@@ -27,7 +27,7 @@ for entry in "Radarr:$RADARR" "Sonarr:$SONARR" "Prowlarr:$PROWLARR" "qBittorrent
   name="${entry%%:*}"
   url="${entry#*:}"
   code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 "$url")
-  [ "$code" = "200" ] || [ "$code" = "301" ] || [ "$code" = "302" ] && echo "  ✅ $name ($code)" || echo "  ❌ $name ($code)"
+  case "$code" in 200|301|302|307) echo "  ✅ $name ($code)" ;; *) echo "  ❌ $name ($code)" ;; esac
 done
 
 echo ""
