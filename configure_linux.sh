@@ -12,6 +12,11 @@ set -e
 PROWLARR="http://localhost:9696"
 RADARR="http://localhost:7878"
 SONARR="http://localhost:8989"
+
+# Container-to-container URLs (used for Prowlarr app connections)
+PROWLARR_INT="http://prowlarr:9696"
+RADARR_INT="http://radarr:7878"
+SONARR_INT="http://sonarr:8989"
 QB="http://localhost:8080"
 
 echo "⏳ Waiting for services to be ready..."
@@ -166,12 +171,12 @@ add_prowlarr_app() {
   local apptype="$4"
   curl -s -X POST "$PROWLARR/api/v1/applications" \
     -H "X-Api-Key: $PROWLARR_KEY" -H "Content-Type: application/json" \
-    -d "{\"name\":\"$name\",\"syncLevel\":\"fullSync\",\"fields\":[{\"name\":\"prowlarrUrl\",\"value\":\"$PROWLARR\"},{\"name\":\"baseUrl\",\"value\":\"$url\"},{\"name\":\"apiKey\",\"value\":\"$apikey\"},{\"name\":\"syncCategories\",\"value\":[2000,2010,2020,2030,2040,2045,2050,2060]}],\"implementationName\":\"$apptype\",\"implementation\":\"$apptype\",\"configContract\":\"${apptype}Settings\",\"infoLink\":\"\"}" > /dev/null
+    -d "{\"name\":\"$name\",\"syncLevel\":\"fullSync\",\"fields\":[{\"name\":\"prowlarrUrl\",\"value\":\"$PROWLARR_INT\"},{\"name\":\"baseUrl\",\"value\":\"$url\"},{\"name\":\"apiKey\",\"value\":\"$apikey\"},{\"name\":\"syncCategories\",\"value\":[2000,2010,2020,2030,2040,2045,2050,2060]}],\"implementationName\":\"$apptype\",\"implementation\":\"$apptype\",\"configContract\":\"${apptype}Settings\",\"infoLink\":\"\"}" > /dev/null
   echo "  ✅ $name"
 }
 
-add_prowlarr_app "Radarr" "$RADARR" "$RADARR_KEY" "Radarr"
-add_prowlarr_app "Sonarr" "$SONARR" "$SONARR_KEY" "Sonarr"
+add_prowlarr_app "Radarr" "$RADARR_INT" "$RADARR_KEY" "Radarr"
+add_prowlarr_app "Sonarr" "$SONARR_INT" "$SONARR_KEY" "Sonarr"
 
 echo ""
 echo "⏳ Forcing Prowlarr sync..."
