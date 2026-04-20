@@ -38,21 +38,21 @@ Jellyseerr → Radarr / Sonarr → Prowlarr → qBittorrent
 ### 1️⃣ Clone the Repo
 
 ```bash
-git clone https://github.com/hardlygospel/Jellyfin-mediastack.git
-cd Jellyfin-mediastack
+git clone https://github.com/hardlygospel/jellyfin-mediastack.git
+cd jellyfin-mediastack
 ```
 
 ### 2️⃣ Check Your Volume Paths
 
-Open `docker-compose.yml` and confirm these paths match where you actually store things:
+Open `docker-compose.yml` and confirm the host-side paths match where you want to store things:
 
 ```yaml
-~/Movies      # Radarr puts finished movies here
-~/TV          # Sonarr puts finished shows here
-~/Downloads   # qBittorrent downloads to here first
+~/Movies      # your Mac/Linux folder → mapped to /movies inside Radarr's container
+~/TV          # your Mac/Linux folder → mapped to /tv inside Sonarr's container
+~/Downloads   # your Mac/Linux folder → mapped to /downloads inside qBittorrent's container
 ```
 
-> ✏️ Change them if needed before continuing.
+> ✏️ Change the left-hand paths if needed. The right-hand container paths (`/movies`, `/tv`, `/downloads`) must stay as-is — the configure script sets Radarr and Sonarr up to use those automatically.
 
 ### 3️⃣ Start the Stack
 
@@ -77,6 +77,7 @@ This script will automatically:
 - ⏳ Wait for all services to be ready
 - 🌐 Open each service in your browser to trigger first-time initialisation
 - 🔑 Pull API keys from each app automatically
+- 📁 Set Radarr's root folder to `/movies` and Sonarr's to `/tv`
 - 📦 Add 6 free public indexers to Prowlarr (YTS, 1337x, EZTV, Nyaa, The Pirate Bay, Kickass Torrents)
 - 🔗 Connect Prowlarr to both Radarr and Sonarr
 - ⬇️ Add qBittorrent as the download client in both Radarr and Sonarr
