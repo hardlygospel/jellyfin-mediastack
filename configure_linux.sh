@@ -35,6 +35,8 @@ if [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
   xdg-open http://localhost:8989 2>/dev/null || true
   xdg-open http://localhost:9696 2>/dev/null || true
   xdg-open http://localhost:8080 2>/dev/null || true
+  xdg-open http://localhost:8096 2>/dev/null || true
+  xdg-open http://localhost:5055 2>/dev/null || true
   sleep 10
 else
   echo "ℹ️  No display detected — skipping browser launch."
@@ -210,5 +212,6 @@ echo "  Radarr:      http://localhost:7878"
 echo "  Sonarr:      http://localhost:8989"
 echo "  Prowlarr:    http://localhost:9696"
 echo "  qBittorrent: http://localhost:8080"
+echo "  Jellyfin:    http://localhost:8096"
 echo "  Jellyseerr:  http://localhost:5055"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
