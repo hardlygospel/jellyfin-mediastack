@@ -69,10 +69,10 @@ Pick the script for your OS:
 
 ```bash
 # 🍎 macOS
-chmod +x configure_macos.sh && ./configure_macos.sh
+bash configure_macos.sh
 
 # 🐧 Linux
-chmod +x configure_linux.sh && ./configure_linux.sh
+bash configure_linux.sh
 ```
 
 This script will automatically:
@@ -83,11 +83,26 @@ This script will automatically:
 - 📁 Set Radarr's root folder to `/movies` and Sonarr's to `/tv`
 - 🔗 Connect Prowlarr to Radarr & Sonarr using container networking
 - 🔄 Force-sync indexers to Radarr & Sonarr
-- 📦 Add 6 free public indexers to Prowlarr (YTS, 1337x, EZTV, Nyaa, The Pirate Bay, Kickass Torrents)
-- 🔗 Connect Prowlarr to both Radarr and Sonarr
+- 📦 Add 5 free public indexers to Prowlarr (YTS, Nyaa, The Pirate Bay, LimeTorrents, TorrentDownload)
 - ⬇️ Add qBittorrent as the download client in both Radarr and Sonarr
 
 > ⚠️ **Note on qBittorrent:** New installs generate a temporary password printed in the container logs. The script detects this automatically. If it can't log in, it'll tell you exactly what to do.
+
+### 5️⃣ Set Up Jellyfin
+
+Open http://localhost:8096 and complete the setup wizard:
+
+- Create your admin account
+- Add a **Movies** library → folder: `/data/movies`
+- Add a **TV Shows** library → folder: `/data/tv`
+
+### 6️⃣ Set Up Jellyseerr
+
+```bash
+bash configure_jellyseerr.sh
+```
+
+Then open http://localhost:5055 and sign in with your Jellyfin credentials.
 
 ---
 
@@ -127,6 +142,10 @@ Radarr will check the feed every 24 hours and grab anything new. 🤖
 
 | File | What it does |
 |---|---|
-| `docker-compose.yml` | 🐳 Defines and starts all five containers |
+| `docker-compose.yml` | 🐳 Defines and starts all six containers |
 | `configure_macos.sh` | 🍎 Wires everything together on macOS |
 | `configure_linux.sh` | 🐧 Wires everything together on Linux |
+| `configure_jellyseerr.sh` | 🌐 Connects Jellyseerr to Jellyfin, Radarr, and Sonarr |
+| `health_check.sh` | 🏥 Checks all containers, indexers, and download clients |
+| `full_reset.sh` | 🔄 Nuclear option — rebuilds all Prowlarr connections from scratch |
+| `FIXES.md` | 📋 Documents all bugs found and fixed during build |
