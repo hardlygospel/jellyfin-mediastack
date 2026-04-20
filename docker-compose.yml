@@ -42,6 +42,21 @@ services:
       - 9696:9696
     restart: unless-stopped
 
+  jellyfin:
+    image: linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Australia/Hobart
+    volumes:
+      - ~/docker/jellyfin/config:/config
+      - ~/Movies:/data/movies
+      - ~/TV:/data/tv
+    ports:
+      - 8096:8096
+    restart: unless-stopped
+
   jellyseerr:
     image: fallenbagel/jellyseerr:latest
     container_name: jellyseerr
