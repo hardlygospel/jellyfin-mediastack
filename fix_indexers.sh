@@ -8,25 +8,19 @@
 # └─────────────────────────────────────────────────────────┘
 
 PROWLARR="http://localhost:9696"
-RADARR="http://localhost:7878"
-SONARR="http://localhost:8989"
 
 echo "🔑 Grabbing API keys..."
 PROWLARR_KEY=$(grep -oE '<ApiKey>[^<]+' ~/docker/prowlarr/config/config.xml 2>/dev/null | sed 's/<ApiKey>//' | head -1)
-RADARR_KEY=$(grep -oE '<ApiKey>[^<]+' ~/docker/radarr/config/config.xml 2>/dev/null | sed 's/<ApiKey>//' | head -1)
-SONARR_KEY=$(grep -oE '<ApiKey>[^<]+' ~/docker/sonarr/config/config.xml 2>/dev/null | sed 's/<ApiKey>//' | head -1)
 
-if [ -z "$PROWLARR_KEY" ] || [ -z "$RADARR_KEY" ] || [ -z "$SONARR_KEY" ]; then
-  echo "❌ Could not read API keys. Are the containers running?"
+if [ -z "$PROWLARR_KEY" ]; then
+  echo "❌ Could not read Prowlarr API key. Is the container running?"
   exit 1
 fi
 
 echo ""
 echo "🔍 Fetching app profile ID..."
 APP_PROFILE_ID=$(curl -s "$PROWLARR/api/v1/appprofile" -H "X-Api-Key: $PROWLARR_KEY" | grep -oE '"id":[0-9]+' | grep -oE '[0-9]+' | head -1)
-if [ -z "$APP_PROFILE_ID" ]; then
-  APP_PROFILE_ID=1
-fi
+APP_PROFILE_ID=${APP_PROFILE_ID:-1}
 echo "  Using profile ID: $APP_PROFILE_ID"
 
 echo ""
@@ -36,7 +30,6 @@ add_indexer() {
   local defname="$1"
   local name="$2"
 
-  # Fetch the schema for this indexer
   local schema
   schema=$(curl -s "$PROWLARR/api/v1/indexer/schema" -H "X-Api-Key: $PROWLARR_KEY" \
     | python3 -c "
@@ -54,7 +47,7 @@ if match:
 " 2>/dev/null)
 
   if [ -z "$schema" ]; then
-    echo "  ⚠️  $name — schema not found, skipping"
+    echo "  ⚠️  $name — schema not found"
     return
   fi
 
@@ -71,12 +64,12 @@ if match:
   fi
 }
 
-add_indexer "YTS"            "YTS"
-add_indexer "1337x"          "1337x"
-add_indexer "EZTV"           "EZTV"
-add_indexer "Nyaa"           "Nyaa"
-add_indexer "ThePirateBay"   "The Pirate Bay"
-add_indexer "KickassTorrents" "Kickass Torrents"
+add_indexer "yts"                  "YTS"
+add_indexer "1337x"                "1337x"
+add_indexer "eztv"                 "EZTV"
+add_indexer "nyaasi"               "Nyaa"
+add_indexer "thepiratebay"         "The Pirate Bay"
+add_indexer "kickasstorrents-to"   "Kickass Torrents"
 
 echo ""
 echo "🔗 Syncing Prowlarr → Radarr and Sonarr..."
