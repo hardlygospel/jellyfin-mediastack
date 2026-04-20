@@ -75,16 +75,17 @@ if match:
   if [ "$result" = "201" ] || [ "$result" = "200" ]; then
     echo "  ✅ $name"
   else
-    echo "  ⚠️  $name — HTTP $result"
+    echo "  ⚠️  $name — HTTP $result (skipping)"
   fi
 }
 
-add_indexer "yts"                "YTS"
-add_indexer "1337x"              "1337x"
-add_indexer "eztv"               "EZTV"
-add_indexer "nyaasi"             "Nyaa"
-add_indexer "thepiratebay"       "The Pirate Bay"
-add_indexer "kickasstorrents-to" "Kickass Torrents"
+# Working indexers (not Cloudflare-blocked)
+add_indexer "yts"            "YTS"
+add_indexer "nyaasi"         "Nyaa"
+add_indexer "thepiratebay"   "The Pirate Bay"
+add_indexer "limetorrents"   "LimeTorrents"
+add_indexer "torrentdownload" "TorrentDownload"
+add_indexer "bittorrentfiles" "BitTorrentFiles"
 
 echo ""
 echo "🔗 Syncing Prowlarr → Radarr and Sonarr..."
