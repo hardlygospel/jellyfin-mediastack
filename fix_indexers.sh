@@ -19,15 +19,22 @@ fi
 
 echo ""
 echo "🗑️  Clearing existing indexers..."
-curl -s "$PROWLARR/api/v1/indexer" -H "X-Api-Key: $PROWLARR_KEY" \
-  | grep -oE '"id":[0-9]+' | grep -oE '[0-9]+' | while read id; do
+IDS=$(curl -s "$PROWLARR/api/v1/indexer" -H "X-Api-Key: $PROWLARR_KEY" \
+  | python3 -c "import sys,json; [print(x['id']) for x in json.load(sys.stdin)]")
+
+if [ -z "$IDS" ]; then
+  echo "  Nothing to clear."
+else
+  for id in $IDS; do
     curl -s -X DELETE "$PROWLARR/api/v1/indexer/$id" -H "X-Api-Key: $PROWLARR_KEY" > /dev/null
     echo "  🗑️  Removed indexer ID $id"
-done
+  done
+fi
 
 echo ""
 echo "🔍 Fetching app profile ID..."
-APP_PROFILE_ID=$(curl -s "$PROWLARR/api/v1/appprofile" -H "X-Api-Key: $PROWLARR_KEY" | grep -oE '"id":[0-9]+' | grep -oE '[0-9]+' | head -1)
+APP_PROFILE_ID=$(curl -s "$PROWLARR/api/v1/appprofile" -H "X-Api-Key: $PROWLARR_KEY" \
+  | python3 -c "import sys,json; data=json.load(sys.stdin); print(data[0]['id'])" 2>/dev/null)
 APP_PROFILE_ID=${APP_PROFILE_ID:-1}
 echo "  Using profile ID: $APP_PROFILE_ID"
 
