@@ -12,6 +12,7 @@
 | 📺 **Sonarr** | Monitors and downloads TV shows | http://localhost:8989 |
 | 🔍 **Prowlarr** | Manages torrent indexers | http://localhost:9696 |
 | ⬇️ **qBittorrent** | Handles the actual torrent downloads | http://localhost:8080 |
+| 🎞️ **Jellyfin** | Media server — watch your movies and shows | http://localhost:8096 |
 | 🌐 **Jellyseerr** | Request interface — browse and request movies/shows | http://localhost:5055 |
 
 ### 🔗 How They Connect
@@ -20,6 +21,8 @@
 Jellyseerr → Radarr / Sonarr → Prowlarr → qBittorrent
                                               ↓
                                          ~/Downloads
+                                              ↓
+                                          Jellyfin
 ```
 
 > 💡 Jellyseerr is optional — you can add content directly in Radarr/Sonarr if you prefer.
