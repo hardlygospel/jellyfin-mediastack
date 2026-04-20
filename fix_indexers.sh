@@ -3,8 +3,8 @@
 # ┌─────────────────────────────────────────────────────────┐
 # │   🔧  JELLYFIN MEDIASTACK — FIX INDEXERS              │
 # │                                                         │
-# │  Adds indexers to Prowlarr then syncs to               │
-# │  Radarr and Sonarr.                                    │
+# │  Clears existing indexers, re-adds them, then syncs    │
+# │  to Radarr and Sonarr.                                 │
 # └─────────────────────────────────────────────────────────┘
 
 PROWLARR="http://localhost:9696"
@@ -16,6 +16,14 @@ if [ -z "$PROWLARR_KEY" ]; then
   echo "❌ Could not read Prowlarr API key. Is the container running?"
   exit 1
 fi
+
+echo ""
+echo "🗑️  Clearing existing indexers..."
+curl -s "$PROWLARR/api/v1/indexer" -H "X-Api-Key: $PROWLARR_KEY" \
+  | grep -oE '"id":[0-9]+' | grep -oE '[0-9]+' | while read id; do
+    curl -s -X DELETE "$PROWLARR/api/v1/indexer/$id" -H "X-Api-Key: $PROWLARR_KEY" > /dev/null
+    echo "  🗑️  Removed indexer ID $id"
+done
 
 echo ""
 echo "🔍 Fetching app profile ID..."
@@ -64,12 +72,12 @@ if match:
   fi
 }
 
-add_indexer "yts"                  "YTS"
-add_indexer "1337x"                "1337x"
-add_indexer "eztv"                 "EZTV"
-add_indexer "nyaasi"               "Nyaa"
-add_indexer "thepiratebay"         "The Pirate Bay"
-add_indexer "kickasstorrents-to"   "Kickass Torrents"
+add_indexer "yts"                "YTS"
+add_indexer "1337x"              "1337x"
+add_indexer "eztv"               "EZTV"
+add_indexer "nyaasi"             "Nyaa"
+add_indexer "thepiratebay"       "The Pirate Bay"
+add_indexer "kickasstorrents-to" "Kickass Torrents"
 
 echo ""
 echo "🔗 Syncing Prowlarr → Radarr and Sonarr..."
