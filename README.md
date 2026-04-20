@@ -1,20 +1,20 @@
-# mediastack
+# 🎬 Jellyfin Mediastack
 
-A self-hosted media automation stack running in Docker on macOS. Drop a movie or show into Radarr/Sonarr (or let Jellyseerr request it), and it gets found, downloaded, and ready to watch — automatically.
+> A self-hosted media automation stack running in Docker. Drop a movie or show into Radarr/Sonarr (or let Jellyseerr request it), and it gets found, downloaded, and ready to watch — automatically. 🍿
 
 ---
 
-## What's included
+## 🧩 What's Included
 
 | Service | Purpose | URL |
 |---|---|---|
-| **Radarr** | Monitors and downloads movies | http://localhost:7878 |
-| **Sonarr** | Monitors and downloads TV shows | http://localhost:8989 |
-| **Prowlarr** | Manages torrent indexers, feeds them to Radarr/Sonarr | http://localhost:9696 |
-| **qBittorrent** | Handles the actual torrent downloads | http://localhost:8080 |
-| **Jellyseerr** | Request interface — browse and request movies/shows | http://localhost:5055 |
+| 🎥 **Radarr** | Monitors and downloads movies | http://localhost:7878 |
+| 📺 **Sonarr** | Monitors and downloads TV shows | http://localhost:8989 |
+| 🔍 **Prowlarr** | Manages torrent indexers | http://localhost:9696 |
+| ⬇️ **qBittorrent** | Handles the actual torrent downloads | http://localhost:8080 |
+| 🌐 **Jellyseerr** | Request interface — browse and request movies/shows | http://localhost:5055 |
 
-### How they connect
+### 🔗 How They Connect
 
 ```
 Jellyseerr → Radarr / Sonarr → Prowlarr → qBittorrent
@@ -22,27 +22,27 @@ Jellyseerr → Radarr / Sonarr → Prowlarr → qBittorrent
                                          ~/Downloads
 ```
 
-Jellyseerr is optional — you can add content directly in Radarr/Sonarr if you prefer.
+> 💡 Jellyseerr is optional — you can add content directly in Radarr/Sonarr if you prefer.
 
 ---
 
-## Requirements
+## ✅ Requirements
 
-- macOS
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- 🍎 macOS
+- 🐳 [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
 ---
 
-## Setup
+## 🚀 Setup
 
-### 1. Clone the repo
+### 1️⃣ Clone the Repo
 
 ```bash
-git clone https://github.com/hardlygospel/mediastack.git
-cd mediastack
+git clone https://github.com/hardlygospel/Jellyfin-mediastack.git
+cd Jellyfin-mediastack
 ```
 
-### 2. Check your volume paths
+### 2️⃣ Check Your Volume Paths
 
 Open `docker-compose.yml` and confirm these paths match where you actually store things:
 
@@ -52,33 +52,34 @@ Open `docker-compose.yml` and confirm these paths match where you actually store
 ~/Downloads   # qBittorrent downloads to here first
 ```
 
-Change them if needed before continuing.
+> ✏️ Change them if needed before continuing.
 
-### 3. Start the stack
+### 3️⃣ Start the Stack
 
 ```bash
 docker compose up -d
 ```
 
-### 4. Configure everything
+### 4️⃣ Configure Everything
 
 ```bash
 chmod +x configure_media_stack.sh && ./configure_media_stack.sh
 ```
 
-This script will:
-- Wait for all services to be ready
-- Open each service in your browser to trigger first-time initialisation
-- Pull API keys from each app automatically
-- Add 6 free public indexers to Prowlarr (YTS, 1337x, EZTV, Nyaa, The Pirate Bay, Kickass Torrents)
-- Connect Prowlarr to both Radarr and Sonarr
-- Add qBittorrent as the download client in both Radarr and Sonarr
+This script will automatically:
 
-> **Note on qBittorrent:** New installs generate a temporary password printed in the container logs. The script detects this automatically. If it can't log in, it'll tell you exactly what to do.
+- ⏳ Wait for all services to be ready
+- 🌐 Open each service in your browser to trigger first-time initialisation
+- 🔑 Pull API keys from each app automatically
+- 📦 Add 6 free public indexers to Prowlarr (YTS, 1337x, EZTV, Nyaa, The Pirate Bay, Kickass Torrents)
+- 🔗 Connect Prowlarr to both Radarr and Sonarr
+- ⬇️ Add qBittorrent as the download client in both Radarr and Sonarr
+
+> ⚠️ **Note on qBittorrent:** New installs generate a temporary password printed in the container logs. The script detects this automatically. If it can't log in, it'll tell you exactly what to do.
 
 ---
 
-## Restarting the stack
+## 🔄 Restarting the Stack
 
 ```bash
 docker compose restart
@@ -92,26 +93,27 @@ docker compose down && docker compose up -d
 
 ---
 
-## Letterboxd integration
+## 🎞️ Letterboxd Integration
 
-You can feed a Letterboxd watchlist or list directly into Radarr so it automatically adds and searches for movies.
+Feed a Letterboxd watchlist or list directly into Radarr so it automatically adds and searches for movies!
 
-1. Get your Letterboxd RSS feed URL:
-   - Watchlist: `https://letterboxd.com/<username>/watchlist/rss/`
-   - Any list: `https://letterboxd.com/<username>/list/<list-name>/rss/`
+**1. Get your Letterboxd RSS feed URL:**
+- 📋 Watchlist: `https://letterboxd.com/<username>/watchlist/rss/`
+- 📁 Any list: `https://letterboxd.com/<username>/list/<list-name>/rss/`
 
-2. In Radarr: **Settings → Lists → + → RSS List**
-3. Paste the URL, set your quality profile, enable **Monitor** and **Search on Add**
+**2.** In Radarr: **Settings → Lists → + → RSS List**
 
-Radarr will check the feed every 24 hours and grab anything new.
+**3.** Paste the URL, set your quality profile, enable **Monitor** and **Search on Add**
 
-> **Note:** Letterboxd RSS only includes the 50 most recent items. Older entries won't sync automatically.
+Radarr will check the feed every 24 hours and grab anything new. 🤖
+
+> 📌 **Note:** Letterboxd RSS only includes the 50 most recent items. Older entries won't sync automatically.
 
 ---
 
-## Scripts
+## 📁 Files
 
-| Script | What it does |
+| File | What it does |
 |---|---|
-| `docker-compose.yml` | Defines and starts all five containers |
-| `configure_media_stack.sh` | Wires everything together after first boot |
+| `docker-compose.yml` | 🐳 Defines and starts all five containers |
+| `configure_media_stack.sh` | ⚙️ Wires everything together after first boot |
