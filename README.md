@@ -78,6 +78,8 @@ This script will automatically:
 - 🌐 Open each service in your browser to trigger first-time initialisation
 - 🔑 Pull API keys from each app automatically
 - 📁 Set Radarr's root folder to `/movies` and Sonarr's to `/tv`
+- 🔗 Connect Prowlarr to Radarr & Sonarr using container networking
+- 🔄 Force-sync indexers to Radarr & Sonarr
 - 📦 Add 6 free public indexers to Prowlarr (YTS, 1337x, EZTV, Nyaa, The Pirate Bay, Kickass Torrents)
 - 🔗 Connect Prowlarr to both Radarr and Sonarr
 - ⬇️ Add qBittorrent as the download client in both Radarr and Sonarr
