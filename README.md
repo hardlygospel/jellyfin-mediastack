@@ -28,8 +28,8 @@ Jellyseerr → Radarr / Sonarr → Prowlarr → qBittorrent
 
 ## ✅ Requirements
 
-- 🍎 macOS
-- 🐳 [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- 🍎 **macOS** or 🐧 **Linux**
+- 🐳 [Docker Desktop](https://www.docker.com/products/docker-desktop/) (macOS) or [Docker Engine](https://docs.docker.com/engine/install/) (Linux)
 
 ---
 
@@ -62,8 +62,14 @@ docker compose up -d
 
 ### 4️⃣ Configure Everything
 
+Pick the script for your OS:
+
 ```bash
-chmod +x configure_media_stack.sh && ./configure_media_stack.sh
+# 🍎 macOS
+chmod +x configure_macos.sh && ./configure_macos.sh
+
+# 🐧 Linux
+chmod +x configure_linux.sh && ./configure_linux.sh
 ```
 
 This script will automatically:
@@ -116,4 +122,5 @@ Radarr will check the feed every 24 hours and grab anything new. 🤖
 | File | What it does |
 |---|---|
 | `docker-compose.yml` | 🐳 Defines and starts all five containers |
-| `configure_media_stack.sh` | ⚙️ Wires everything together after first boot |
+| `configure_macos.sh` | 🍎 Wires everything together on macOS |
+| `configure_linux.sh` | 🐧 Wires everything together on Linux |
