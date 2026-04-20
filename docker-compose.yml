@@ -13,6 +13,8 @@ services:
     ports:
       - 7878:7878
     restart: unless-stopped
+    networks:
+      - mediastack
 
   sonarr:
     image: linuxserver/sonarr:latest
@@ -28,6 +30,8 @@ services:
     ports:
       - 8989:8989
     restart: unless-stopped
+    networks:
+      - mediastack
 
   prowlarr:
     image: linuxserver/prowlarr:latest
@@ -41,6 +45,8 @@ services:
     ports:
       - 9696:9696
     restart: unless-stopped
+    networks:
+      - mediastack
 
   jellyfin:
     image: linuxserver/jellyfin:latest
@@ -56,6 +62,8 @@ services:
     ports:
       - 8096:8096
     restart: unless-stopped
+    networks:
+      - mediastack
 
   jellyseerr:
     image: fallenbagel/jellyseerr:latest
@@ -67,6 +75,8 @@ services:
     ports:
       - 5055:5055
     restart: unless-stopped
+    networks:
+      - mediastack
 
   qbittorrent:
     image: linuxserver/qbittorrent:latest
@@ -84,3 +94,9 @@ services:
       - 6881:6881
       - 6881:6881/udp
     restart: unless-stopped
+    networks:
+      - mediastack
+
+networks:
+  mediastack:
+    name: mediastack
