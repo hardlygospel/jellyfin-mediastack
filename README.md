@@ -150,3 +150,13 @@ Radarr will check the feed every 24 hours and grab anything new. 🤖
 | `health_check.sh` | 🏥 Checks all containers, indexers, and download clients |
 | `full_reset.sh` | 🔄 Nuclear option — rebuilds all Prowlarr connections from scratch |
 | `FIXES.md` | 📋 Documents all bugs found and fixed during build |
+
+---
+
+## 📄 Licence
+
+This project is licensed under the **GNU General Public License v3.0**.
+
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge)](https://github.com/hardlygospel/jellyfin-mediastack/blob/main/LICENSE)
+
+You are free to use, modify, and distribute this software under the terms of the GPL-3.0. See the [full licence](https://github.com/hardlygospel/jellyfin-mediastack/blob/main/LICENSE) for details.
